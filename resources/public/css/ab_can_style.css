@@ -1,0 +1,11 @@
+/* ab-can CSS */
+
+.wrapper {
+  width: 50vw;
+  height: 50vh;
+  /*animation: rotx 5s infinite alternate-reverse;*/
+}
+
+.wrapper svg {
+  border: 1px solid black;
+}
