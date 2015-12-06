@@ -8,7 +8,7 @@
                  [org.clojure/clojurescript "1.7.170"]
                  [devcards "0.2.1"]
                  [sablono "0.4.0"]
-                 #_[org.omcljs/om "0.9.0"]
+                 [org.omcljs/om "0.9.0"]
                  #_[reagent "0.5.1"]]
 
   :plugins [[lein-cljsbuild "1.1.1"]
@@ -16,7 +16,7 @@
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "target"]
-  
+
   :source-paths ["src"]
 
   :cljsbuild {

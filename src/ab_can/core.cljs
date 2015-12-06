@@ -1,6 +1,7 @@
 (ns ab-can.core
   (:require
-   #_[om.core :as om :include-macros true]
+   [om.core :as om :include-macros true]
+   [om.dom :as dom :include-macros true]
    [sablono.core :as sab :include-macros true])
   (:require-macros
    [devcards.core :as dc :refer [defcard deftest]]))
@@ -118,8 +119,8 @@
   [[sx sy] [ex ey] points i]
   (let [mx (- ex sx)
         my (- ey sy)]
-    [(* (/ i points) mx (.random js/Math))
-     (+ (* i points (.random js/Math)) my )]))
+    [(* (/ i points) (rand mx))
+     (/ (* i points (rand)) my )]))
 
 (defn random-quad
   [points control start end]
@@ -134,23 +135,20 @@
 
 (defn random-point
   [mx my]
-  [(.round js/Math (* mx (.random js/Math)))
-   (.round js/Math (* my (.random js/Math)))
-   ;(+ (* 0.5 mx) (.round js/Math (* (* 1.75 mx) (.random js/Math))))
-   ;(+ (* 0.5 my) (.round js/Math (* (* 0.5 my) (.random js/Math))))
-   ])
+  [(.round js/Math (rand mx))
+   (.round js/Math (rand my))])
 
 (defn random-color
   []
-  (let [r (.floor js/Math (* 255 (.random js/Math)))
-        b (.floor js/Math (* 255 (.random js/Math)))
-        g (.floor js/Math (* 255 (.random js/Math)))]
+  (let [r (.floor js/Math (rand 255))
+        b (.floor js/Math (rand 255))
+        g (.floor js/Math (rand 255))]
     (str "rgb(" r "," b "," g ")")))
 
 (defn n-random-quads
-  [count mx my]
+  [count mx my control]
   (map (fn [i]
-         (let [control (random-point (* 0.5 mx) (* 0.5 my))
+         (let [ ;;control (random-point (* 0.5 mx) (* 0.5 my))
                start (random-point mx my)
                end (random-point mx my)
                points (* 15 (.random js/Math))
@@ -160,7 +158,42 @@
            (draw-path {:d (random-quad points control start end)
                        :opts [{:stroke stroke :strokeWidth strokeWidth :fill "transparent"}]}))) (range count)))
 
-(defcard svg
+(defn om-slider [svg-data param value min max]
+  (sab/html
+   [:input {:type "range" :value value :min min :max max
+            :style {:width "100%"}
+            :on-change (fn [e]
+                         (om/update! svg-data param (.-target.value e)))}]))
+
+(defn abstract-svg [svg-data owner]
+  (let [{:keys [count mx my]} svg-data
+        control [(rand mx) (rand my)]]
+    (om/component
+     (sab/html
+      [:div
+       [:svg {:width "100%"
+              :height "500px"
+              :version "1.1"
+              :xmlns="http://www.w3.org/2000/svg"}
+        (n-random-quads count mx my control)]
+       [:div
+        [:span (str "Count: " (int count))]
+        (om-slider svg-data :count count 1 200)]
+       [:div
+        [:span (str "mx: " (int mx) "px")]
+        (om-slider svg-data :mx mx 5 2500)]
+       [:div
+        [:span (str "my: " (int my) "px")]
+        (om-slider svg-data :my my 5 2500)]]))))
+
+(defcard om-controlled
+  (dc/om-root abstract-svg)
+  {:count 20 :mx 500 :my 500} ;; initial data
+  {:inspect-data true
+   :frame true
+   :history true })
+
+(defcard dim-1500x1500
   (sab/html [:div {:class "wrapper"}
              [:svg {:width "100%"
                     :height "100%"
@@ -191,40 +224,8 @@
 
               ;(draw-path {:d (random-quad 5 [65 250] [10 30] [360 10])
               ;            :opts '({:stroke "green" :strokeWidth 10, :fill "transparent"})})
-              (n-random-quads (* 100 (.random js/Math)) 1500 1500)
+              (n-random-quads (* 100 (.random js/Math)) 1500 1500 [150 300])
               ]]))
-
-(defcard svg2
-  (sab/html [:div {:class "wrapper"}
-             [:svg {:width "100%"
-                    :height "100%"
-                    :version "1.1"
-                    :xmlns="http://www.w3.org/2000/svg"}
-              (n-random-quads (* 100 (.random js/Math)) 1500 1500)]]))
-
-(defcard svg3
-  (sab/html [:div {:class "wrapper"}
-             [:svg {:width "100%"
-                    :height "100%"
-                    :version "1.1"
-                    :xmlns="http://www.w3.org/2000/svg"}
-              (n-random-quads (* 100 (.random js/Math)) 2000 2000)]]))
-
-(defcard svg4
-  (sab/html [:div {:class "wrapper"}
-             [:svg {:width "100%"
-                    :height "100%"
-                    :version "1.1"
-                    :xmlns="http://www.w3.org/2000/svg"}
-              (n-random-quads (* 100 (.random js/Math)) 100 50)]]))
-
-(defcard svg5
-  (sab/html [:div {:class "wrapper"}
-             [:svg {:width "100%"
-                    :height "100%"
-                    :version "1.1"
-                    :xmlns="http://www.w3.org/2000/svg"}
-              (n-random-quads (* 100 (.random js/Math)) 150 150)]]))
 
 
 (defn main []
